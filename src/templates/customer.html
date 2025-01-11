@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Management</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        td[contenteditable="true"] {
+            background-color: #f9f9f9;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        textarea,
+        input[type="date"] {
+            width: calc(100% - 20px);
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        input[type="submit"] {
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Customer Management</h1>
+
+    <button type="button" onclick="toggleForm()">Create a customer</button>
+        <script>
+            function toggleForm() {
+                const form = document.querySelector('form');
+                form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            }
+        </script>
+    <form method="POST" style="display: none;">
+        <fieldset>
+            <legend>User Personal Information</legend>
+            <label for="First Name">Enter your First Name:</label>
+            <input type="text" id="first_name" name="first_name" required />
+            <label for="Last Name">Enter your Last Name:</label>
+            <input type="text" id="last_name" name="last_name" required />
+            <label for="yob">Enter your year of birth:</label>
+            <input type="date" id="yob" name="yob" required />
+            <label for="phone number">Enter your phone number:</label>
+            <input type="text" id="phone_number" name="phone_number" required />
+            <input type="submit" value="Submit" />
+        </fieldset>
+    </form>
+    <table>
+        <thead>
+            <tr>
+                <th>Customer ID</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Year of Birth</th>
+                <th>Phone Number</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for customer in data %}
+            <tr>
+                <td>{{ customer[0] }}</td>
+                <td contenteditable="true">{{ customer[1] }}</td>
+                <td contenteditable="true">{{ customer[2] }}</td>
+                <td contenteditable="true">{{ customer[3] }}</td>
+                <td contenteditable="true">{{ customer[4] }}</td>
+                <td><a href="{{ url_for('customer', customer_id=customer[0]) }}">Delete</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <footer>
+        <p>&copy; 2023 Bus Ticket Booking System</p>
+    </footer>
+</body>
+
+</html>
