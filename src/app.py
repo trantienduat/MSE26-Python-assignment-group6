@@ -43,10 +43,10 @@ def customer():
         data = request.get_json()
         first_name = data.get('firstName')
         last_name = data.get('lastName')
-        year_of_birth = data.get('yearOfBirth')
+        date_of_bitrh = data.get('dateOfBirth')
         phone_number = data.get('phoneNumber')
-        cur.execute("INSERT INTO customers (first_name, last_name, year_of_birth, phone_number) VALUES (?, ?, ?, ?)",
-                    (first_name, last_name, year_of_birth, phone_number))
+        cur.execute("INSERT INTO customers (first_name, last_name, date_of_bitrh, phone_number) VALUES (?, ?, ?, ?)",
+                    (first_name, last_name, date_of_bitrh, phone_number))
         db.commit()
     data = cur.execute("SELECT * FROM customers").fetchall()
     return render_template('customer.html', data=data)
@@ -56,16 +56,16 @@ def update_customer(customer_id):
     data = request.get_json()
     first_name = data.get('firstName')
     last_name = data.get('lastName')
-    year_of_birth = data.get('yearOfBirth')
+    date_of_bitrh = data.get('dateOfBirth')
     phone_number = data.get('phoneNumber')
 
     db = get_db()
     cur = db.cursor()
     cur.execute("""
         UPDATE customers
-        SET first_name = ?, last_name = ?, year_of_birth = ?, phone_number = ?
+        SET first_name = ?, last_name = ?, date_of_bitrh = ?, phone_number = ?
         WHERE customer_id = ?
-    """, (first_name, last_name, year_of_birth, phone_number, customer_id))
+    """, (first_name, last_name, date_of_bitrh, phone_number, customer_id))
     db.commit()
     return jsonify({"message": "Customer updated successfully"}), 200
 
