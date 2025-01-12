@@ -1,5 +1,5 @@
 import sqlite3
-from flask import Flask, render_template, g, request
+from flask import Flask, render_template, g, request, jsonify
 
 app = Flask(__name__)
 
@@ -29,34 +29,55 @@ def init_db():
 
 # ======== Routing =========================================================== #
 # -------- CUSTOMER ---------------------------------------------------------- #
+
 @app.route('/')
 @app.route('/home')
 def home():
     return render_template('home.html')
 
-@app.route('/customer', methods=["GET", "POST"])
+@app.route('/customers', methods = ["GET", "POST"])
 def customer():
     db = get_db()
     cur = db.cursor()
-
     if request.method == 'POST': 
-        first_name = request.form['first_name'] 
-        last_name = request.form['last_name'] 
-        yob = request.form['yob'] 
-        phone_number = request.form['phone_number'] 
+        data = request.get_json()
+        first_name = data.get('firstName')
+        last_name = data.get('lastName')
+        year_of_birth = data.get('yearOfBirth')
+        phone_number = data.get('phoneNumber')
         cur.execute("INSERT INTO customers (first_name, last_name, year_of_birth, phone_number) VALUES (?, ?, ?, ?)",
-                    (first_name, last_name, yob, phone_number))
+                    (first_name, last_name, year_of_birth, phone_number))
         db.commit()
-
     data = cur.execute("SELECT * FROM customers").fetchall()
-
     return render_template('customer.html', data=data)
-  
 
-@app.route('/customer/<customer_id>', methods=["DELETE"])
-def delete_customer():
-    pass
+@app.route('/customers/<customer_id>', methods = ["PUT"])
+def update_customer(customer_id):
+    data = request.get_json()
+    first_name = data.get('firstName')
+    last_name = data.get('lastName')
+    year_of_birth = data.get('yearOfBirth')
+    phone_number = data.get('phoneNumber')
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("""
+        UPDATE customers
+        SET first_name = ?, last_name = ?, year_of_birth = ?, phone_number = ?
+        WHERE customer_id = ?
+    """, (first_name, last_name, year_of_birth, phone_number, customer_id))
+    db.commit()
+    return jsonify({"message": "Customer updated successfully"}), 200
+
+@app.route('/customers/<customer_id>', methods = ["DELETE"])
+def delete_customer(customer_id):
+    db = get_db()
+    cur = db.cursor()
+    request.args.get("customer_id")
+    cur.execute("DELETE FROM customers WHERE customer_id = ?", (customer_id,))
+    db.commit()
+    return '', 204
 
 if __name__ == "__main__":
     init_db()
-    app.run(debug=True, use_reloader=False)
+    app.run(debug=True, use_reloader=False) 
