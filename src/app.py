@@ -28,15 +28,15 @@ def init_db():
 
 
 # ======== Routing =========================================================== #
-# -------- CUSTOMER ---------------------------------------------------------- #
 
 @app.route('/')
 @app.route('/home')
 def home():
     return render_template('home.html')
 
+# -------- CUSTOMER ---------------------------------------------------------- #
 @app.route('/customers', methods = ["GET", "POST"])
-def customer():
+def customers():
     db = get_db()
     cur = db.cursor()
     if request.method == 'POST': 
@@ -77,6 +77,45 @@ def delete_customer(customer_id):
     cur.execute("DELETE FROM customers WHERE customer_id = ?", (customer_id,))
     db.commit()
     return '', 204
+
+
+# -------- TRIP ---------------------------------------------------------- #
+@app.route('/trips', methods=["GET", "POST"])
+def trips():
+    db = get_db()
+    cur = db.cursor()
+
+    if request.method == 'POST': 
+        data = request.get_json()
+        origin = data.get('origin')
+        destination = data.get('destination')
+        cur.execute("INSERT INTO trips (origin, destination) VALUES (?, ?)",
+                    (origin, destination))
+        db.commit()
+    data = cur.execute("SELECT * FROM trips").fetchall()
+    return render_template('trip.html', data=data)
+
+@app.route('/trips/<trip_id>/schedules')
+def schedules_by_trip_id(trip_id):
+    db = get_db()
+    cur = db.cursor()
+    data = cur.execute("""
+        SELECT * FROM schedules 
+        WHERE trip_id = ?
+    """, (trip_id)).fetchall()
+    return jsonify(data), 200
+
+# -------- SCHEDULE ---------------------------------------------------------- #
+@app.route('/schedules/<schedule_id>')
+def available_seat_quantity_by_schedule_id(schedule_id):
+    db = get_db()
+    cur = db.cursor()
+    data = cur.execute("""
+    SELECT
+        (SELECT seat_quantity FROM schedules WHERE schedule_id = ?) -
+        (SELECT SUM(seat_quantity) FROM tickets WHERE schedule_id = ?);
+    """, (schedule_id, schedule_id)).fetchall()
+    return jsonify(data), 200
 
 if __name__ == "__main__":
     init_db()
