@@ -29,16 +29,14 @@ def init_db():
         db.commit()
 
 
-# ======== Routing =========================================================== #
-
-
+# <==================== Routing =======================================================> #
 @app.route("/")
 @app.route("/home")
 def home():
     return render_template("home.html")
 
 
-# -------- CUSTOMER ---------------------------------------------------------- #
+# <==================== CUSTOMER =======================================================> #
 @app.route("/customers", methods=["GET", "POST"])
 def customers():
     db = get_db()
@@ -90,7 +88,7 @@ def delete_customer(customer_id):
     return "", 204
 
 
-# -------- TRIP ---------------------------------------------------------- #
+# <====================== TRIPS =======================================================> #
 @app.route("/trips", methods=["GET", "POST"])
 def trips():
     db = get_db()
@@ -144,7 +142,7 @@ def schedules_by_trip_id(trip_id):
     return jsonify(data), 200
 
 
-# -------- SCHEDULE ---------------------------------------------------------- #
+# <==================== SCHEDULES =======================================================> #
 @app.route("/schedules/<schedule_id>")
 def available_seat_quantity_by_schedule_id(schedule_id):
     db = get_db()
