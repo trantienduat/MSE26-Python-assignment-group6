@@ -12,9 +12,9 @@
     <a href="{{ url_for('home') }}">Back to Home</a>
     <h1>Trip Management</h1>
 
-    <button type="button" onclick="toggleForm()">Create a trip</button>
+    <button type="button" onclick="toggleTripForm()">Create a trip</button>
 
-    <form method="POST" style="display: none;" onsubmit="submitForm(event)">
+    <form id="trips-form" method="POST" style="display: none;" onsubmit="submitTripForm(event)">
         <fieldset>
             <legend>Trip Information</legend>
             <label for="origin">Enter origin:</label>
@@ -41,7 +41,7 @@
                 <td contenteditable="true">{{ trip[0] }}</td>
                 <td contenteditable="true">{{ trip[1] }}</td>
                 <td contenteditable="true">{{ trip[2] }}</td>
-                <td contenteditable="true"><button onclick="showSchedule({{ trip[0] }})">Show</button></td>
+                <td contenteditable="false"><button onclick="showSchedule({{ trip[0] }})">Show</button></td>
                 <td>
                     <button onclick="deletetrip({{ trip[0] }})">Delete</button>
                     <button onclick="updatetrip({{ trip[0] }})">Update</button>
@@ -53,6 +53,21 @@
     </table>
 
     <h2 id="schedules-h2"></h2>
+    <div id="trip_id_div" style="display: none;"></div>
+    <button id="schedules-create-button" type="button" style="display: none;" onclick="toggleScheduleForm()">Create a schedule</button>
+    <form id="schedules-form" method="POST" style="display: none;" onsubmit="submitScheduleForm(event)">
+        <fieldset>
+            <legend>Schedule Information</legend>
+            <label for="seat-quantity">Enter seat quantity:</label>
+            <input type="text" id="seat-quantity" name="seat-quantity" required />
+            <label for="departure-time">Enter departure time:</label>
+            <input type="text" id="departure-time" name="departure-time" required />
+            <label for="arrival-time">Enter departure time:</label>
+            <input type="text" id="arrival-time" name="arrival-time" required />
+            <input type="submit" value="Submit" />
+            <input type="hidden" id="trip_id_input" name="trip_id_input" />
+        </fieldset>
+    </form>
     <table id="schedules-table" style="width: 60%;">
     </table>
 
@@ -62,12 +77,18 @@
     </footer>
 
     <script>
-        function showSchedule(schedule_id) {
+        function showSchedule(trip_id) {
             var description = document.getElementById("schedules-h2")
-            description.innerHTML = `Schedules of Trip number: ${schedule_id}`
+            description.innerHTML = `Schedules of Trip number: ${trip_id}`
+
+            var create_schedule_button = document.getElementById("schedules-create-button")
+            create_schedule_button.style.display = "block";
+
+            var trip_id_div = document.getElementById("trip_id_div")
+            trip_id_div.innerHTML = trip_id;
+
             var table = document.getElementById("schedules-table");
-            // var is_editable = is_editable_schedule(schedule_id)
-            fetch(`/trips/${schedule_id}/schedules`, {
+            fetch(`/trips/${trip_id}/schedules`, {
                 method: "GET"
             }).then(response => response.json())
                 .then(data => {
@@ -80,19 +101,22 @@
                                 <th>Arrival Time</th>
                             </tr>
                         </thead>
+                        <tbody></tbody>
                     `;
+                    var tbody = table.querySelector('tbody');
                     data.forEach(schedule => {
-                        var row = table.insertRow();
-                        var cell1 = row.insertCell(0);
-                        var cell2 = row.insertCell(1);
-                        var cell3 = row.insertCell(2);
+                        var row = tbody.insertRow();
+                        var hiddel_trip_id_cell = row.insertCell(0);
+                        var cell1 = row.insertCell(1);
+                        var cell2 = row.insertCell(2);
+                        var cell3 = row.insertCell(3);
                         is_editable_schedule(schedule[0]).then(isEditable => {
                             cell1.contentEditable = isEditable ? "true" : "false";
                             cell2.contentEditable = isEditable ? "true" : "false";
                             cell3.contentEditable = isEditable ? "true" : "false";
                         });
-                        cell2.contentEditable = "true";
-                        cell3.contentEditable = "true";
+                        hiddel_trip_id_cell.style.display = "none";
+                        hiddel_trip_id_cell.innerHTML = schedule[1];
                         cell1.innerHTML = schedule[2];
                         cell2.innerHTML = schedule[3];
                         cell3.innerHTML = schedule[4];
@@ -161,7 +185,7 @@
             // });
         }
 
-        function submitForm(event) {
+        function submitTripForm(event) {
             event.preventDefault();
 
             const form = event.target;
@@ -186,10 +210,50 @@
             });
         }
 
-        function toggleForm() {
-            const form = document.querySelector('form');
+        function toggleTripForm() {
+            var form = document.getElementById('trips-form');
             form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            return;
         }
+
+
+        // schedules
+        function toggleScheduleForm() {
+            var form = document.getElementById('schedules-form');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            
+            return;
+        }
+
+        function submitScheduleForm(event) {
+            event.preventDefault();
+            var trip_id = document.getElementById('trip_id_div');
+
+            const form = event.target;
+            const formData = {
+            tripId: trip_id.innerHTML,
+            seatQuantity: form['seat-quantity'].value,
+            departureTime: form['departure-time'].value,
+            arrivalTime: form['arrival-time'].value
+            };
+            console.log(formData);
+
+            fetch('/schedules', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+            }).then(response => {
+            if (response.ok) {
+                alert('Schedule created successfully');
+                location.reload();
+            } else {
+                alert('Failed to create schedule');
+            }
+            });
+        }
+
     </script>
 </body>
 
