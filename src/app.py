@@ -119,7 +119,7 @@ def trip_actions(trip_id):
         origin = data.get("origin")
         destination = data.get("destination")
         cur.execute(
-            "UPDATE trips SET origin=:origin AND destination=:destination WHERE trip_id=:id",
+            "UPDATE trips SET origin=:origin, destination=:destination WHERE trip_id=:id",
             {"id": trip_id, "origin": origin, "destination": destination},
         )
         db.commit()
