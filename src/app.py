@@ -141,8 +141,24 @@ def schedules_by_trip_id(trip_id):
     ).fetchall()
     return jsonify(data), 200
 
+# -------- SCHEDULE ---------------------------------------------------------- #
+@app.route('/schedules', methods=["GET", "POST"])
+def schedules():
+    db = get_db()
+    cur = db.cursor()
 
-# <==================== SCHEDULES =======================================================> #
+    if request.method == 'POST': 
+        data = request.get_json()
+        trip_id = data.get('tripId')
+        departure_time = data.get('departureTime')
+        arrival_time = data.get('arrivalTime')
+        seat_quantity = data.get('seatQuantity')
+        cur.execute("INSERT INTO schedules (trip_id, departure_time, arrival_time, seat_quantity) VALUES (?, ?, ?, ?)",
+                    (trip_id, departure_time, arrival_time, seat_quantity))
+        db.commit()
+    data = cur.execute("SELECT * FROM schedules").fetchall()
+    return jsonify(data), 201
+
 @app.route("/schedules/<schedule_id>")
 def available_seat_quantity_by_schedule_id(schedule_id):
     db = get_db()
