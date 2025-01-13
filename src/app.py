@@ -163,6 +163,7 @@ def schedules():
 def available_seat_quantity_by_schedule_id(schedule_id):
     db = get_db()
     cur = db.cursor()
+    # total quantity for each schedule - total ticket in 
     data = cur.execute(
         """
     SELECT
@@ -175,5 +176,5 @@ def available_seat_quantity_by_schedule_id(schedule_id):
 
 
 if __name__ == "__main__":
-    # init_db()
+    init_db()
     app.run(debug=True, use_reloader=False)
