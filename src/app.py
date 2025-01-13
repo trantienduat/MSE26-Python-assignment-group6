@@ -1,5 +1,6 @@
 import sqlite3
 from flask import Flask, render_template, g, request, jsonify
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -116,6 +117,100 @@ def available_seat_quantity_by_schedule_id(schedule_id):
         (SELECT SUM(seat_quantity) FROM tickets WHERE schedule_id = ?);
     """, (schedule_id, schedule_id)).fetchall()
     return jsonify(data), 200
+
+
+# -------- Ticket ---------------------------------------------------------- #
+@app.route('/ticket_cancel/<ticket_id>', methods=["PUT"])
+def ticket_cancel(ticket_id):
+    db = get_db()
+    cur = db.cursor()
+    status = cur.execute("SELECT status FROM tickets where ticket_id = ? ", (ticket_id,)).fetchone()
+    if status[0] == 'BOOKED':
+        cur.execute("UPDATE tickets set status = 'CANCEL' WHERE ticket_id = ?", (ticket_id,)).fetchone()
+        db.commit()
+        if cur.rowcount == 1:
+            return jsonify({"message": "Ticket cancel success"}), 200
+        else:
+            return jsonify({"message": "Ticket cancel fail"}), 400
+
+
+@app.route('/ticket/show_ticket/<customer_id>', methods=["get"])
+def ticket(customer_id):
+    db = get_db()
+    cur = db.cursor()
+    query = """
+    SELECT 
+        t.customer_id,
+        trip.origin,
+        trip.destination,
+        t.seat_quantity,
+        sch.departure_time,
+        sch.arrival_time,
+        t.ticket_id,
+        t.departure_date,
+        t.status
+    FROM 
+        tickets t
+    JOIN 
+        trips trip ON sch.trip_id = trip.trip_id
+    JOIN 
+        schedules sch ON t.schedule_id = sch.schedule_id
+    WHERE 
+        t.customer_id = ?;
+    """
+    data = cur.execute(query, (customer_id,)).fetchall()
+    return render_template('ticket.html', data=data)
+
+
+def seat_available(schedule_id, departure_date):
+    db = get_db()
+    cur = db.cursor()
+    data = cur.execute(
+        "SELECT SUM(seat_quantity) AS total_sum FROM tickets where schedule_id = ? and status = 'BOOKED' and departure_date = ?",
+        (schedule_id, departure_date,)).fetchone()
+    seat_quantity = cur.execute("SELECT seat_quantity FROM schedules where schedule_id = ? ", (schedule_id,)).fetchone()
+    remaining_seat = data[0]
+    if remaining_seat is None:
+        remaining_seat = 0
+    if remaining_seat < seat_quantity[0]:
+        return True
+    else:
+        return False
+
+
+@app.route('/ticket/buy_ticket', methods=["post"])
+def buy_ticket():
+    db = get_db()
+    cur = db.cursor()
+    data = request.get_json()
+    schedule_id = data.get('schedule_id')
+    trip_id = data.get('trip_id')
+    customer_id = data.get('customer_id')
+    seat_quantity = data.get('seat_quantity')
+    departure_date = datetime.strptime(data.get('departure_date'), "%Y-%m-%d")
+    if datetime.now() > departure_date:
+        return jsonify({"message": "Ticket buy fail"}), 400
+    check = cur.execute("SELECT * FROM schedules WHERE schedule_id = ? and trip_id=?",
+                        (schedule_id, trip_id)).fetchone()
+
+    if check is not None:
+        if seat_available(trip_id, departure_date):
+            cur.execute(
+                "INSERT INTO tickets (schedule_id,customer_id, departure_date, status,seat_quantity) VALUES ( ?, ?, ?, ?,?)",
+                (schedule_id, customer_id, departure_date.strftime("%d-%m-%Y"), 'BOOKED', seat_quantity))
+            db.commit()
+            return jsonify({"message": "Ticket is buy success"}), 200
+    return jsonify({"message": "Ticket buy fail"}), 400
+
+
+@app.route('/ticket/<customer_id>', methods=["GET"])
+def customers_login(customer_id):
+    db = get_db()
+    cur = db.cursor()
+    data = cur.execute("SELECT * FROM customers WHERE customer_id = ? ", (customer_id,)).fetchone()
+    trip = cur.execute("SELECT * FROM trips").fetchall()
+    return render_template('buy_ticket.html', data=data, trip=trip)
+
 
 if __name__ == "__main__":
     init_db()

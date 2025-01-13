@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>trip Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+<a href="{{ url_for('home') }}">Back to Home</a>
+<p><a href="/ticket/show_ticket/1">Manage ticket</a></p>
+<h1>Buy Ticket Management</h1>
+<tr data-customer-id="{{ data[0] }}">
+    <!-- <td>{{ data[0] }}</td> -->
+    <td>{{ data[1] }}</td>
+    <td>{{ data[2] }}</td>
+    <td>{{ data[3] }}</td>
+    <td>{{ data[4] }}</td>
+</tr>
+<table>
+    <thead>
+    <tr>
+        <th>Trip Number</th>
+        <th>Origin</th>
+        <th>Destination</th>
+        <th>Schedule Actions</th>
+        <th>Choose Schedule</th>
+        <th>Choose Date</th>
+        <th>Seat quantity</th>
+        <th>Buy Ticket</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for trip in trip %}
+    <tr data-ticket-id="{{ trip[0] }}">
+        <!-- <td>{{ trip[0] }}</td> -->
+        <td>{{ trip[0] }}</td>
+        <td>{{ trip[1] }}</td>
+        <td>{{ trip[2] }}</td>
+        <td>
+            <button onclick="showSchedule({{ trip[0] }})">Show</button>
+        </td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"><input type="date"></td>
+        <td contenteditable="true" placeholder="seat_quantity"> </td>
+        <td>
+            <button onclick="buyTicket({{ trip[0] }}, {{ data[0] }})">Buy</button>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<h2 id="schedules-h2"></h2>
+<table id="schedules-table" style="width: 60%;">
+</table>
+
+
+<footer>
+    <p>&copy; 2025 Bus Ticket Booking System</p>
+</footer>
+
+<script>
+    function showSchedule(schedule_id) {
+    var description = document.getElementById("schedules-h2")
+    description.innerHTML = `Schedules of Trip number: ${schedule_id}`
+    var table = document.getElementById("schedules-table");
+    // var is_editable = is_editable_schedule(schedule_id)
+    fetch(`/trips/${schedule_id}/schedules`, {
+        method: "GET"
+    }).then(response => response.json())
+        .then(data => {
+            // Clear existing table rows
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Schedule id</th>
+                        <th>Seat Quantity</th>
+                        <th>Departure Time</th>
+                        <th>Arrival Time</th>
+                    </tr>
+                </thead>
+            `;
+            data.forEach(schedule => {
+                var row = table.insertRow();
+                var cell1 = row.insertCell(0);
+                var cell2 = row.insertCell(1);
+                var cell3 = row.insertCell(2);
+                var cell4 = row.insertCell(3);
+                cell1.innerHTML = schedule[0];
+                cell2.innerHTML = schedule[2];
+                cell3.innerHTML = schedule[3];
+                cell3.innerHTML = schedule[4];
+            });
+        })
+        .catch(error => console.error('Error fetching schedules:', error));
+}
+
+function buyTicket(ticket_id, customerId) {
+    // Get the row containing the customer data
+    const row = document.querySelector(`tr[data-ticket-id="${ticket_id}"]`);
+    const tds_input = row.querySelectorAll('td[contenteditable="true"]');
+    // Create a JSON object with the customer data
+    const input = tds_input[1].querySelector('input[type="date"]');
+    const dateTimeValue = input.value;
+    console.log(dateTimeValue);
+
+    console.log(dateTimeValue)
+    const ticketData = {
+        schedule_id: tds_input[0].innerText,
+        departure_date: dateTimeValue,
+        seat_quantity: tds_input[2].innerText,
+        customer_id:customerId,
+        trip_id: ticket_id
+    };
+
+    // Send the PUT request with the customer data
+    fetch(`/ticket/buy_ticket`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(ticketData)
+    }).then(response => {
+        if (response.ok) {
+            alert('Ticket buy success');
+            location.reload();
+        } else {
+            alert('Ticket buy fail');
+        }
+    });
+}
+</script>
+</body>
+
+</html>
