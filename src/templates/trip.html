@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>trip Management</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
 
-<body>
+  <body>
     <a href="{{ url_for('home') }}">Back to Home</a>
     <h1>Trip Management</h1>
 
@@ -25,17 +27,17 @@
         </fieldset>
     </form>
     <table id="outputTable">
-        <thead>
-            <tr>
-                <th>Trip Number</th>
-                <th>Origin</th>
-                <th>Destination</th>
-                <th>Schedule Actions</th>
-                <th>Trip Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for trip in data %}
+      <thead>
+        <tr>
+          <th>Trip Number</th>
+          <th>Origin</th>
+          <th>Destination</th>
+          <th>Schedule Actions</th>
+          <th>Trip Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for trip in data %}
             <tr data-trip-id="{{ trip[0] }}">
                 <!-- <td>{{ trip[0] }}</td> -->
                 <td contenteditable="true">{{ trip[0] }}</td>
@@ -48,8 +50,8 @@
                     
                 </td>
             </tr>
-            {% endfor %}
-        </tbody>
+        {% endfor %}
+      </tbody>
     </table>
 
     <h2 id="schedules-h2"></h2>
@@ -71,9 +73,8 @@
     <table id="schedules-table" style="width: 60%;">
     </table>
 
-    
     <footer>
-        <p>&copy; 2025 Bus Ticket Booking System</p>
+      <p>&copy; 2025 Bus Ticket Booking System</p>
     </footer>
 
     <script>
@@ -141,49 +142,50 @@
         }
 
         function deletetrip(tripId) {
-            // fetch(`/trips/${tripId}`, {
-            //     method: 'DELETE'
-            // }).then(response => {
-            //     if (response.ok) {
-            //         alert('trip deleted successfully');
-            //         location.reload();
-            //     } else {
-            //         alert('Failed to delete trip');
-            //     }
-            // });
-        }
+        fetch(`/trips/${tripId}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }).then((response) => {
+          if (response.ok) {
+            alert("trip deleted successfully");
+            location.reload();
+          } else {
+            alert("Failed to delete trip");
+          }
+        });
+      }
 
-        function updatetrip(tripId) {
-            // // Get the row containing the trip data
-            // const row = document.querySelector(`tr[data-trip-id="${tripId}"]`);
+      function updatetrip(tripId) {
+        // Get the row containing the trip data
+        const row = document.querySelector(`tr[data-trip-id="${tripId}"]`);
 
-            // // Get all the td elements in the row
-            // const tds = row.querySelectorAll('td[contenteditable="true"]');
+        // Get all the td elements in the row
+        const tds = row.querySelectorAll('td[contenteditable="true"]');
 
-            // // Create a JSON object with the trip data
-            // const tripData = {
-            //     firstName: tds[0].innerText,
-            //     lastName: tds[1].innerText,
-            //     dateOfBirth: tds[2].innerText,
-            //     phoneNumber: tds[3].innerText
-            // };
+        // Create a JSON object with the trip data
+        const tripData = {
+            "origin": tds[0].innerText,
+            "destination": tds[1].innerText,
+        };
 
-            // // Send the PUT request with the trip data
-            // fetch(`/trips/${tripId}`, {
-            //     method: 'PUT',
-            //     headers: {
-            //         'Content-Type': 'application/json'
-            //     },
-            //     body: JSON.stringify(tripData)
-            // }).then(response => {
-            //     if (response.ok) {
-            //         alert('trip updated successfully');
-            //         location.reload();
-            //     } else {
-            //         alert('Failed to update trip');
-            //     }
-            // });
-        }
+        // Send the PUT request with the trip data
+        fetch(`/trips/${tripId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(tripData),
+        }).then((response) => {
+          if (response.ok) {
+            alert("trip updated successfully");
+            location.reload();
+          } else {
+            alert("Failed to update trip");
+          }
+        });
+      }
 
         function submitTripForm(event) {
             event.preventDefault();
@@ -255,6 +257,5 @@
         }
 
     </script>
-</body>
-
+  </body>
 </html>
