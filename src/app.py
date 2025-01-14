@@ -242,21 +242,22 @@ def ticket(customer_id):
         t.customer_id = ?;
     """
     data = cur.execute(query, (customer_id,)).fetchall()
-    return render_template('ticket.html', data=data)
+    return render_template('ticket.html', data=data, customer=customer_id)
 
 
-def seat_available(schedule_id, departure_date):
+def seat_available(schedule_id, departure_date, seat_request):
     db = get_db()
     cur = db.cursor()
     data = cur.execute(
-        "SELECT SUM(seat_quantity) AS total_sum FROM tickets where schedule_id = ? and status = 'BOOKED' and departure_date = ?",
+        "SELECT SUM(seat_quantity) FROM tickets where schedule_id = ? and status = 'BOOKED' and departure_date = ?",
         (schedule_id, departure_date,)).fetchone()
     seat_quantity = cur.execute("SELECT seat_quantity FROM schedules where schedule_id = ? ", (schedule_id,)).fetchone()
-    remaining_seat = data[0]
-    if remaining_seat is None:
-        remaining_seat = 0
-    if remaining_seat < seat_quantity[0]:
-        return True
+    used_seat = data[0]
+    if used_seat is None:
+        used_seat = 0
+    if used_seat < seat_quantity[0]:
+        if seat_quantity[0] - seat_request - used_seat >= 0:
+            return True
     else:
         return False
 
@@ -271,23 +272,34 @@ def buy_ticket():
     customer_id = data.get('customer_id')
     seat_quantity = data.get('seat_quantity')
     departure_date = datetime.strptime(data.get('departure_date'), "%Y-%m-%d")
+    seat_quantity=int(seat_quantity)
     if datetime.now() > departure_date:
-        return jsonify({"message": "Ticket buy fail"}), 400
+        return jsonify({"message": "Ticket buy fail departure date must in the future"}), 400
     check = cur.execute("SELECT * FROM schedules WHERE schedule_id = ? and trip_id=?",
                         (schedule_id, trip_id)).fetchone()
 
     if check is not None:
-        if seat_available(trip_id, departure_date):
+        departure_datestr = departure_date.strftime("%d-%m-%Y")
+        if seat_available(trip_id, departure_datestr, seat_quantity):
             cur.execute(
                 "INSERT INTO tickets (schedule_id,customer_id, departure_date, status,seat_quantity) VALUES ( ?, ?, ?, ?,?)",
-                (schedule_id, customer_id, departure_date.strftime("%d-%m-%Y"), 'BOOKED', seat_quantity))
+                (schedule_id, customer_id, departure_datestr, 'BOOKED', seat_quantity))
             db.commit()
             return jsonify({"message": "Ticket is buy success"}), 200
+        return jsonify({"message": "Select trip is out of Ticket"}), 400
     return jsonify({"message": "Ticket buy fail"}), 400
 
 
+@app.route("/ticket", methods=["GET"])
+def customers_login():
+    db = get_db()
+    cur = db.cursor()
+    data = cur.execute("SELECT * FROM customers").fetchall()
+    return render_template("choose_customer.html", data=data)
+
+
 @app.route('/ticket/<customer_id>', methods=["GET"])
-def customers_login(customer_id):
+def customers_ticket(customer_id):
     db = get_db()
     cur = db.cursor()
     data = cur.execute("SELECT * FROM customers WHERE customer_id = ? ", (customer_id,)).fetchone()
