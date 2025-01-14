@@ -143,10 +143,35 @@ def schedules_by_trip_id(trip_id):
     return jsonify(data), 200
 
 # -------- SCHEDULE ---------------------------------------------------------- #
+@app.route("/schedules/<schedule_id>", methods=["DELETE", "PUT"])
+def schedules_delete_update(schedule_id):
+    db = get_db()
+    cur = db.cursor()
+    return_code = 200
+
+    if request.method == "PUT":
+        data = request.get_json()
+        seat_quantity = data.get("seat_quantity")
+        departure_time = data.get("departure_time")
+        arrival_time = data.get("arrival_time")
+        cur.execute(
+            "UPDATE schedules SET seat_quantity=:seat_quantity, departure_time=:departure_time, arrival_time=:arrival_time WHERE schedule_id=:id",
+            {"id": schedule_id, "seat_quantity": seat_quantity, "departure_time": departure_time, "arrival_time": arrival_time},
+        )
+        db.commit()
+    else:
+        cur.execute("DELETE FROM schedules WHERE schedule_id=:id", {"id": schedule_id})
+        db.commit()
+        return_code = 204
+    data = cur.execute("SELECT * FROM schedules").fetchall()
+    return jsonify(data), return_code
+
+
 @app.route('/schedules', methods=["GET", "POST"])
 def schedules():
     db = get_db()
     cur = db.cursor()
+    return_code = 200
 
     if request.method == 'POST':
         data = request.get_json()
@@ -157,8 +182,9 @@ def schedules():
         cur.execute("INSERT INTO schedules (trip_id, departure_time, arrival_time, seat_quantity) VALUES (?, ?, ?, ?)",
                     (trip_id, departure_time, arrival_time, seat_quantity))
         db.commit()
+        return_code = 201
     data = cur.execute("SELECT * FROM schedules").fetchall()
-    return jsonify(data), 201
+    return jsonify(data), return_code
 
 @app.route("/schedules/<schedule_id>")
 def available_seat_quantity_by_schedule_id(schedule_id):

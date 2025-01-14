@@ -106,11 +106,20 @@
                     var tbody = table.querySelector('tbody');
                     data.forEach(schedule => {
                         var row = tbody.insertRow();
+                        row.setAttribute('schedule-id', schedule[0])
                         var hidden_trip_id_cell = row.insertCell(0);
                         var seat_quantity_cell = row.insertCell(1);
                         var departure_time_cell = row.insertCell(2);
                         var arrival_time_cell = row.insertCell(3);
+                        var actions_cell = row.insertCell(4);
+
                         is_editable_schedule(schedule[0]).then(isEditable => {
+                            if (isEditable) {
+                                actions_cell.innerHTML = `
+                                <button onclick="deleteSchedule(${schedule[0]})">Delete</button>
+                                <button onclick="updateSchedule(${schedule[0]})">Update</button>`;
+                            }
+
                             seat_quantity_cell.contentEditable = isEditable ? "true" : "false";
                             departure_time_cell.contentEditable = isEditable ? "true" : "false";
                             arrival_time_cell.contentEditable = isEditable ? "true" : "false";
@@ -251,6 +260,52 @@
                     location.reload();
                 } else {
                     alert('Failed to create schedule');
+                }
+            });
+        }
+        function deleteSchedule(scheduleId) {
+            fetch(`/schedules/${scheduleId}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }).then((response) => {
+                if (response.ok) {
+                    alert("schedule deleted successfully");
+                    location.reload();
+                } else {
+                    alert("Failed to delete schedule");
+                }
+            });
+        }
+
+        function updateSchedule(scheduleId) {
+            // Get the row containing the trip data
+            const row = document.querySelector(`tr[schedule-id="${scheduleId}"]`);
+
+            // Get all the td elements in the row
+            const tds = row.querySelectorAll('td[contenteditable="true"]');
+
+            // Create a JSON object with the trip data
+            const scheduleData = {
+                "seat_quantity": tds[0].innerText,
+                "departure_time": tds[1].innerText,
+                "arrival_time": tds[2].innerText,
+            };
+
+            // Send the PUT request with the trip data
+            fetch(`/schedules/${scheduleId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(scheduleData),
+            }).then((response) => {
+                if (response.ok) {
+                    alert("schedule updated successfully");
+                    location.reload();
+                } else {
+                    alert("Failed to update trip");
                 }
             });
         }
