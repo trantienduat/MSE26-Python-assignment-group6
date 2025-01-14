@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ticket Management</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        td[contenteditable="true"] {
+            background-color: #f9f9f9;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+    <script>
+        function ticketCancel(ticket_id) {
+    // Get the row containing the customer data
+    const row = document.querySelector(`tr[data-ticket-id="${ticket_id}"]`);
+
+    // Get all the td elements in the row
+    const tds = row.querySelectorAll('td[class="ticketValue"]');
+
+    // Create a JSON object with the customer data
+    const ticketData = {
+        trip_id: tds[0].innerText,
+        seat_number: tds[1].innerText,
+        status: tds[2].innerText,
+    };
+
+    // Send the PUT request with the customer data
+    fetch(`/ticket_cancel/${ticket_id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(ticketData)
+    }).then(response => {
+        if (response.ok) {
+            alert('Ticket cancel success"');
+            location.reload();
+        } else {
+            alert('Ticket cancel fail');
+        }
+    });
+}
+    </script>
+</head>
+
+<body>
+<h1>Customer ticket Management</h1>
+<p><a href="{{ url_for('home') }}">Back to Home</a></p>
+<p><a href="/ticket/1">Buy ticket</a></p>
+<table>
+    <thead>
+    <tr>
+        <th>Origin</th>
+        <th>Destination</th>
+        <th>Seat_quantity</th>
+        <th>Departure_time</th>
+        <th>Arrival time</th>
+        <th>Departure_date</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for ticket in data %}
+    <tr data-ticket-id="{{ ticket[6] }}">
+        <td class="ticketValue">{{ ticket[1] }}</td>
+        <td class="ticketValue">{{ ticket[2] }}</td>
+        <td class="ticketValue">{{ ticket[3] }}</td>
+        <td class="ticketValue">{{ ticket[4] }}</td>
+        <td class="ticketValue">{{ ticket[5] }}</td>
+        <td class="ticketValue">{{ ticket[7] }}</td>
+        <td class="ticketValue">{{ ticket[8] }}</td>
+        <td>
+            <button onclick="ticketCancel({{ ticket[6] }})">Cancel</button>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<footer>
+    <p>&copy; 2025 Bus Ticket Booking System</p>
+</footer>
+</body>
+
+</html>
