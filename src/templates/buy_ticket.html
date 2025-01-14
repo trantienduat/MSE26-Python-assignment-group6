@@ -98,23 +98,49 @@
         .catch(error => console.error('Error fetching schedules:', error));
 }
 
-function buyTicket(ticket_id, customerId) {
+function buyTicket(tripId, customerId) {
     // Get the row containing the customer data
-    const row = document.querySelector(`tr[data-ticket-id="${ticket_id}"]`);
+    const row = document.querySelector(`tr[data-ticket-id="${tripId}"]`);
     const tds_input = row.querySelectorAll('td[contenteditable="true"]');
     // Create a JSON object with the customer data
     const input = tds_input[1].querySelector('input[type="date"]');
     const dateTimeValue = input.value;
-    console.log(dateTimeValue);
+    var scheduleId = tds_input[0].innerText;
+    const seatQuantity = tds_input[2].innerText;
+    const seatQuantityPattern = /^\d+$/;
 
-    console.log(dateTimeValue)
+    if (!Number.isInteger(parseInt(scheduleId))) {
+        alert('Please enter Schedule number');
+        tds_input[0].style.color = 'red';
+        return;
+    } else{
+        tds_input[0].style.color = 'black';
+    }
+    scheduleId = parseInt(scheduleId)
+    // check if scheduleId present in the current list of schedule 
+    
+    if (!seatQuantityPattern.test(seatQuantity)) {
+        alert('Seat quantity must be an integer');
+        tds_input[2].style.color = 'red';
+        return;
+    } else{
+        tds_input[2].style.color = 'black';
+    }
+    if (!dateTimeValue) {
+        alert('Please choose a date');
+        input.style.color = 'red';
+        return;
+    }else{
+        input.style.color = 'black';
+    }
+    
     const ticketData = {
-        schedule_id: tds_input[0].innerText,
+        schedule_id: scheduleId,
         departure_date: dateTimeValue,
-        seat_quantity: tds_input[2].innerText,
+        seat_quantity: seatQuantity,
         customer_id:customerId,
-        trip_id: ticket_id
-    };
+        trip_id: tripId
+    };  
 
     // Send the PUT request with the customer data
     fetch(`/ticket/buy_ticket`, {
@@ -132,6 +158,7 @@ function buyTicket(ticket_id, customerId) {
         }
     });
 }
+
 </script>
 </body>
 
