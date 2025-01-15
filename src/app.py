@@ -280,7 +280,7 @@ def buy_ticket():
                         (schedule_id, trip_id)).fetchone()
 
     if check is not None:
-        departure_datestr = departure_date.strftime("%d-%m-%Y")
+        departure_datestr = departure_date.strftime("%d/%m/%Y")
         if seat_available(trip_id, departure_datestr, seat_quantity):
             cur.execute(
                 "INSERT INTO tickets (schedule_id,customer_id, departure_date, status,seat_quantity) VALUES ( ?, ?, ?, ?,?)",
