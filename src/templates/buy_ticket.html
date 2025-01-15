@@ -11,7 +11,7 @@
 <body>
 <p><a href="{{ url_for('home') }}">Back to Home</a></p>
 <p><a href="{{ url_for('customers_login') }}">Choose another customer</a></p>
-<p><a href="{{url_for('ticket', customer_id=data[0])}}">Buy ticket</a></p>
+<p><a href="{{url_for('ticket', customer_id=data[0])}}">Manage ticket</a></p>
 <h1>Buy Ticket Management</h1>
 <tr data-customer-id="{{ data[0] }}">
     <!-- <td>{{ data[0] }}</td> -->
