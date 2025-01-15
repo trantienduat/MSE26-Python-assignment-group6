@@ -1,6 +1,7 @@
 import sqlite3
 from flask import Flask, render_template, g, request, jsonify
 from datetime import datetime
+import asyncio
 
 app = Flask(__name__)
 
@@ -305,6 +306,19 @@ def customers_ticket(customer_id):
     data = cur.execute("SELECT * FROM customers WHERE customer_id = ? ", (customer_id,)).fetchone()
     trip = cur.execute("SELECT * FROM trips").fetchall()
     return render_template('buy_ticket.html', data=data, trip=trip)
+
+
+async def auto_update_ticket():
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("""UPDATE tickets
+SET status = 'FINISHED'
+WHERE DATE(SUBSTR(departure_date, 7, 4) || '-' || 
+           SUBSTR(departure_date, 4, 2) || '-' || 
+           SUBSTR(departure_date, 1, 2)) < DATE('now')
+AND status = 'BOOKED'
+           """)
+    db.commit()
 
 
 if __name__ == "__main__":
