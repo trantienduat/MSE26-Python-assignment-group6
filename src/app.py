@@ -296,6 +296,7 @@ def customers_login():
     db = get_db()
     cur = db.cursor()
     data = cur.execute("SELECT * FROM customers").fetchall()
+    asyncio.run(auto_update_ticket())
     return render_template("choose_customer.html", data=data)
 
 
